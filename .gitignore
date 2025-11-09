@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Build output
+/dist/
+
+# Production
+/build
+/dist
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local env files
+.env
+.env*.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# IDE
+# 允许提交共享的 VS Code 配置
+!.vscode/launch.json
+!.vscode/tasks.json
+!.vscode/settings.json
+.vscode/*
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+logs
+*.log
+
