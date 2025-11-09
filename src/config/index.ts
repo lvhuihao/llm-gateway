@@ -39,6 +39,15 @@ export const config = {
     maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10),
   },
+  // AES 加密配置
+  auth: {
+    // 是否启用 AES 加密验证
+    enableAESAuth: process.env.ENABLE_AES_AUTH !== 'false',
+    // AES 加密密钥
+    secretKey: process.env.AES_SECRET_KEY || '',
+    // 签名有效期（毫秒），默认 5 分钟
+    signatureMaxAge: parseInt(process.env.AES_SIGNATURE_MAX_AGE || '300000', 10),
+  },
 };
 
 // 验证模型是否支持
@@ -65,6 +74,10 @@ export const validateConfig = (): void => {
   }
   if (!config.llm.baseUrl) {
     throw new Error('LLM_API_BASE_URL 环境变量未设置');
+  }
+  // 如果启用了 AES 验证，则必须设置密钥
+  if (config.auth.enableAESAuth && !config.auth.secretKey) {
+    throw new Error('启用 AES 加密验证时，AES_SECRET_KEY 环境变量必须设置');
   }
 };
 

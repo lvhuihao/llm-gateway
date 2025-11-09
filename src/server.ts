@@ -5,6 +5,7 @@ import express, { Express, Request, Response } from 'express';
 import cors from 'cors';
 import { config, validateConfig } from './config';
 import { logger } from './utils/logger';
+import { verifyAESAuth } from './middleware/auth';
 import chatRouter from './routes/chat';
 import modelsRouter from './routes/models';
 
@@ -30,6 +31,22 @@ app.use((req, res, next) => {
     userAgent: req.get('user-agent'),
   });
   next();
+});
+
+// 全局验签中间件（应用到所有 /api 开头的路由）
+// 排除根路径健康检查
+app.use((req, res, next) => {
+  // 排除根路径健康检查
+  if (req.path === '/') {
+    next();
+    return;
+  }
+  // 对所有 /api 开头的路由应用验签
+  if (req.path.startsWith('/api')) {
+    verifyAESAuth(req, res, next);
+  } else {
+    next();
+  }
 });
 
 // 路由

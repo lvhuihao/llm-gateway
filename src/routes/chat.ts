@@ -7,6 +7,7 @@ import { logger } from '../utils/logger';
 const router = Router();
 
 // POST /api/chat - 处理聊天请求
+// 注意：验签已在 server.ts 中全局应用
 router.post('/', async (req: Request, res: Response) => {
   try {
     const body: GatewayRequest = req.body;
