@@ -8,7 +8,12 @@
     "dev": "tsx watch src/server.ts",
     "build": "tsc && tsc-alias",
     "start": "node -r tsconfig-paths/register dist/server.js",
-    "start:prod": "NODE_ENV=production node -r tsconfig-paths/register dist/server.js",
+    "start:prod": "NODE_ENV=production pm2 start ecosystem.config.js",
+    "stop:prod": "pm2 stop llm-gateway",
+    "restart:prod": "pm2 restart llm-gateway",
+    "delete:prod": "pm2 delete llm-gateway",
+    "logs:prod": "pm2 logs llm-gateway",
+    "status:prod": "pm2 status",
     "lint": "eslint src --ext .ts",
     "type-check": "tsc --noEmit"
   },
@@ -18,6 +23,7 @@
     "express": "^4.18.2",
     "ioredis": "^5.8.2",
     "openai": "^6.8.1",
+    "pm2": "^6.0.13",
     "tsconfig-paths": "^4.2.0",
     "winston": "^3.18.3",
     "winston-daily-rotate-file": "^5.0.0"
