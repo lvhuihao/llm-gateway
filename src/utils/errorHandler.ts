@@ -1,11 +1,34 @@
 import { ErrorResponse } from '@/types';
 import { logger } from './logger';
 
-// 错误处理工具
+/**
+ * OpenAI API 错误接口
+ */
+interface OpenAIError {
+  status?: number;
+  message?: string;
+  code?: string;
+  error?: {
+    error?: {
+      message?: string;
+    };
+  };
+}
+
+/**
+ * 网关错误类
+ * 用于表示网关层面的错误
+ */
 export class GatewayError extends Error {
   statusCode: number;
   code?: string;
 
+  /**
+   * 创建网关错误
+   * @param message 错误消息
+   * @param statusCode HTTP 状态码，默认为 500
+   * @param code 错误代码
+   */
   constructor(message: string, statusCode: number = 500, code?: string) {
     super(message);
     this.name = 'GatewayError';
@@ -14,6 +37,11 @@ export class GatewayError extends Error {
   }
 }
 
+/**
+ * 创建错误响应对象
+ * @param error 错误对象
+ * @returns 错误响应对象
+ */
 export const createErrorResponse = (error: unknown): ErrorResponse => {
   if (error instanceof GatewayError) {
     return {
@@ -43,7 +71,15 @@ export const createErrorResponse = (error: unknown): ErrorResponse => {
   };
 };
 
-export const handleApiError = (error: unknown): { statusCode: number; response: ErrorResponse } => {
+/**
+ * 处理 API 错误
+ * @param error 错误对象
+ * @returns 包含状态码和错误响应的对象
+ */
+export const handleApiError = (error: unknown): {
+  statusCode: number;
+  response: ErrorResponse;
+} => {
   if (error instanceof GatewayError) {
     return {
       statusCode: error.statusCode,
@@ -53,24 +89,28 @@ export const handleApiError = (error: unknown): { statusCode: number; response: 
 
   // 处理 OpenAI SDK 错误
   if (error && typeof error === 'object' && 'status' in error) {
-    const openaiError = error as { status?: number; message?: string; code?: string; error?: unknown };
+    const openaiError = error as OpenAIError;
     const statusCode = openaiError.status || 500;
-    
-    // 如果 OpenAI 错误包含 error 对象
-    if (openaiError.error && typeof openaiError.error === 'object' && 'error' in openaiError.error) {
-      const errorData = (openaiError.error as { error?: unknown }).error;
-      if (errorData && typeof errorData === 'object' && 'message' in errorData) {
-        return {
-          statusCode,
-          response: {
-            error: {
-              message: (errorData as { message: string }).message,
-              type: 'APIError',
-              code: openaiError.code,
-            },
+
+    // 如果 OpenAI 错误包含嵌套的 error 对象
+    if (
+      openaiError.error &&
+      typeof openaiError.error === 'object' &&
+      'error' in openaiError.error &&
+      openaiError.error.error &&
+      typeof openaiError.error.error === 'object' &&
+      'message' in openaiError.error.error
+    ) {
+      return {
+        statusCode,
+        response: {
+          error: {
+            message: openaiError.error.error.message || 'API 错误',
+            type: 'APIError',
+            code: openaiError.code,
           },
-        };
-      }
+        },
+      };
     }
 
     // 直接使用 OpenAI 错误信息

@@ -4,8 +4,45 @@ import { logger } from '../utils/logger';
 import { config } from '../config';
 
 /**
+ * 从请求中提取签名
+ * @param req Express 请求对象
+ * @returns 签名字符串，如果不存在则返回 null
+ */
+const extractSignature = (req: Request): string | null => {
+  // 从 query、body 或 header 中获取签名
+  const signature =
+    (req.query.signature as string) ||
+    (req.body.signature as string) ||
+    (req.headers['x-signature'] as string);
+
+  return signature || null;
+};
+
+/**
+ * 生成要验证的数据字符串
+ * @param req Express 请求对象
+ * @returns 要验证的数据字符串
+ */
+const generateDataToVerify = (req: Request): string => {
+  // 对于 POST/PUT/PATCH 请求，使用请求体（排除 signature 字段）
+  if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
+    const body = { ...req.body };
+    delete body.signature;
+    return JSON.stringify(body);
+  }
+
+  // 对于 GET 等其他请求，使用查询参数（排除 signature 字段）
+  const query = { ...req.query };
+  delete query.signature;
+  return JSON.stringify(query);
+};
+
+/**
  * AES 加密验证中间件
  * 验证请求中的 signature 参数
+ * @param req Express 请求对象
+ * @param res Express 响应对象
+ * @param next Express 下一个中间件函数
  */
 export const verifyAESAuth = (req: Request, res: Response, next: NextFunction): void => {
   try {
@@ -16,12 +53,8 @@ export const verifyAESAuth = (req: Request, res: Response, next: NextFunction): 
       return;
     }
 
-    // 获取签名参数（可以从 query、body 或 header 中获取）
-    const signature = 
-      req.query.signature as string || 
-      req.body.signature as string || 
-      req.headers['x-signature'] as string;
-
+    // 获取签名参数
+    const signature = extractSignature(req);
     if (!signature) {
       logger.warn('请求缺少签名参数', {
         path: req.path,
@@ -39,19 +72,7 @@ export const verifyAESAuth = (req: Request, res: Response, next: NextFunction): 
     }
 
     // 生成要验证的数据字符串
-    // 对于 POST 请求，使用请求体（排除 signature 字段）
-    // 对于 GET 请求，使用查询参数（排除 signature 字段）
-    let dataToVerify = '';
-
-    if (req.method === 'POST' || req.method === 'PUT' || req.method === 'PATCH') {
-      const body = { ...req.body };
-      delete body.signature;
-      dataToVerify = JSON.stringify(body);
-    } else {
-      const query = { ...req.query };
-      delete query.signature;
-      dataToVerify = JSON.stringify(query);
-    }
+    const dataToVerify = generateDataToVerify(req);
 
     // 验证签名（使用配置中的签名有效期）
     const isValid = verifySignature(signature, dataToVerify, config.auth.signatureMaxAge);

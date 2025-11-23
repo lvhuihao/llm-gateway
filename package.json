@@ -5,7 +5,7 @@
   "description": "LLM Gateway - 大模型 API 网关服务",
   "main": "dist/server.js",
   "scripts": {
-    "dev": "tsx watch src/server.ts",
+    "dev": "NODE_OPTIONS='-r tsconfig-paths/register' tsx watch src/server.ts",
     "build": "tsc",
     "start": "node -r tsconfig-paths/register dist/server.js",
     "lint": "eslint src --ext .ts",

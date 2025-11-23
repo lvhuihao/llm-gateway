@@ -9,10 +9,12 @@ const KEY_LENGTH = 32; // 密钥长度（字节）
 
 /**
  * 从环境变量获取或生成密钥
+ * @returns 密钥 Buffer
+ * @throws Error 如果环境变量未设置
  */
 const getSecretKey = (): Buffer => {
   const secretKey = process.env.AES_SECRET_KEY;
-  
+
   if (!secretKey) {
     throw new Error('AES_SECRET_KEY 环境变量未设置');
   }
@@ -30,6 +32,7 @@ const getSecretKey = (): Buffer => {
  * AES 加密
  * @param text 要加密的文本
  * @returns 加密后的字符串（格式：iv:encryptedData，都是 base64 编码）
+ * @throws Error 如果加密失败
  */
 export const encrypt = (text: string): string => {
   try {
@@ -51,6 +54,7 @@ export const encrypt = (text: string): string => {
  * AES 解密
  * @param encryptedText 加密的文本（格式：iv:encryptedData）
  * @returns 解密后的原始文本
+ * @throws Error 如果解密失败或格式错误
  */
 export const decrypt = (encryptedText: string): string => {
   try {
@@ -94,8 +98,11 @@ export const generateSignature = (data: string, timestamp?: number): string => {
  * @param maxAge 签名最大有效期（毫秒），默认 5 分钟
  * @returns 验证是否通过
  */
-export const verifySignature = (signature: string, data: string, maxAge: number = 5 * 60 * 1000): boolean => {
-
+export const verifySignature = (
+  signature: string,
+  data: string,
+  maxAge: number = 5 * 60 * 1000
+): boolean => {
   try {
     const decrypted = decrypt(signature);
     const parts = decrypted.split(':');

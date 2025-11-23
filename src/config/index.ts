@@ -1,12 +1,16 @@
-// 支持的模型列表
-export const SUPPORTED_MODELS = [
-  'qwen-flash',
-] as const;
+/**
+ * 支持的模型列表
+ */
+export const SUPPORTED_MODELS = ['qwen-flash', 'qwen3-30b-a3b-instruct-2507'] as const;
 
-// 模型配置类型
-export type SupportedModel = typeof SUPPORTED_MODELS[number];
+/**
+ * 模型配置类型
+ */
+export type SupportedModel = (typeof SUPPORTED_MODELS)[number];
 
-// 配置管理
+/**
+ * 配置管理对象
+ */
 export const config = {
   // LLM API 配置
   llm: {
@@ -50,7 +54,11 @@ export const config = {
   },
 };
 
-// 验证模型是否支持
+/**
+ * 验证模型是否支持
+ * @param model 模型名称
+ * @returns 是否支持该模型
+ */
 export const isModelSupported = (model: string): boolean => {
   if (!config.llm.enableModelValidation) {
     return true;
@@ -58,7 +66,11 @@ export const isModelSupported = (model: string): boolean => {
   return config.llm.supportedModels.includes(model);
 };
 
-// 获取模型配置
+/**
+ * 获取模型配置
+ * @param model 模型名称（可选）
+ * @returns 模型配置对象
+ */
 export const getModelConfig = (model?: string) => {
   const modelName = model || config.llm.defaultModel;
   return {
@@ -67,7 +79,10 @@ export const getModelConfig = (model?: string) => {
   };
 };
 
-// 验证必要的环境变量
+/**
+ * 验证必要的环境变量
+ * @throws Error 如果配置验证失败
+ */
 export const validateConfig = (): void => {
   if (!config.llm.apiKey) {
     throw new Error('LLM_API_KEY 环境变量未设置');

@@ -5,13 +5,26 @@ export interface GatewayRequest {
   temperature?: number;
   max_tokens?: number;
   stream?: boolean;
+  sessionId?: string; // 会话ID，用于管理对话历史
   [key: string]: unknown;
 }
 
 // 消息类型
 export interface Message {
-  role: 'system' | 'user' | 'assistant';
+  role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
+  tool_calls?: ToolCall[];
+  tool_call_id?: string;
+}
+
+// 工具调用类型
+export interface ToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string;
+  };
 }
 
 // LLM API 请求类型
@@ -32,12 +45,13 @@ export interface LLMResponse {
   model: string;
   choices: Choice[];
   usage?: Usage;
+  sessionId?: string; // 会话ID，用于管理对话历史
 }
 
 export interface Choice {
   index: number;
   message: Message;
-  finish_reason: string;
+  finish_reason: string | null;
 }
 
 export interface Usage {
@@ -55,3 +69,13 @@ export interface ErrorResponse {
   };
 }
 
+// 分析请求类型
+export interface AnalyzeRequest {
+  url?: string; // page url
+  html?: string; // html content
+  axTree?: string; // a11y tree
+  title?: string; // page title
+  task: string; // 任务描述
+  module?: string; // 模型名称
+  sessionId?: string; // 会话ID，用于管理对话历史
+}
