@@ -40,7 +40,7 @@ export const config = {
   },
   // 限流配置
   rateLimit: {
-    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
+    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '10', 10),
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10),
   },
   // AES 加密配置
@@ -51,6 +51,21 @@ export const config = {
     secretKey: process.env.AES_SECRET_KEY || '',
     // 签名有效期（毫秒），默认 5 分钟
     signatureMaxAge: parseInt(process.env.AES_SIGNATURE_MAX_AGE || '300000', 10),
+  },
+  // Redis 配置
+  redis: {
+    // 是否启用 Redis（默认：false，使用内存存储）
+    enabled: process.env.ENABLE_REDIS === 'true',
+    // Redis 连接 URL（如果设置，将优先使用）
+    url: process.env.REDIS_URL || '',
+    // Redis 主机地址
+    host: process.env.REDIS_HOST || 'localhost',
+    // Redis 端口
+    port: parseInt(process.env.REDIS_PORT || '6379', 10),
+    // Redis 密码
+    password: process.env.REDIS_PASSWORD || '',
+    // Redis 数据库编号
+    db: parseInt(process.env.REDIS_DB || '0', 10),
   },
 };
 

@@ -6,6 +6,8 @@ import cors from 'cors';
 import { config, validateConfig } from './config';
 import { logger } from './utils/logger';
 import { verifyAESAuth } from './middleware/auth';
+import { rateLimitMiddleware } from './middleware/rateLimit';
+import { closeRedisClient } from './utils/redis';
 import chatRouter from './routes/chat';
 import modelsRouter from './routes/models';
 import analyzeRouter from './routes/analyze';
@@ -42,6 +44,14 @@ const setupRequestLogging = (): void => {
     });
     next();
   });
+};
+
+/**
+ * 配置限流中间件
+ */
+const setupRateLimit = (): void => {
+  // 对 /api 开头的路由应用限流（在验签之前，减少无效请求的处理成本）
+  app.use('/api', rateLimitMiddleware());
 };
 
 /**
@@ -131,8 +141,16 @@ const startServer = (): void => {
  * 配置优雅关闭
  */
 const setupGracefulShutdown = (): void => {
-  const shutdown = (signal: string) => {
+  const shutdown = async (signal: string) => {
     logger.info(`收到 ${signal} 信号，正在关闭服务器...`);
+    
+    // 关闭 Redis 连接
+    try {
+      await closeRedisClient();
+    } catch (error) {
+      logger.error('关闭 Redis 连接时出错', error);
+    }
+    
     process.exit(0);
   };
 
@@ -143,6 +161,7 @@ const setupGracefulShutdown = (): void => {
 // 初始化应用
 setupBasicMiddleware();
 setupRequestLogging();
+setupRateLimit(); // 限流在验签之前
 setupAuthMiddleware();
 setupRoutes();
 setupHealthCheck();

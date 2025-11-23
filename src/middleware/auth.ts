@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { verifySignature } from '../utils/crypto';
+import { verifySignature, verifySignatureWithNonce } from '../utils/crypto';
 import { logger } from '../utils/logger';
 import { config } from '../config';
 
@@ -44,7 +44,11 @@ const generateDataToVerify = (req: Request): string => {
  * @param res Express 响应对象
  * @param next Express 下一个中间件函数
  */
-export const verifyAESAuth = (req: Request, res: Response, next: NextFunction): void => {
+export const verifyAESAuth = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
     // 检查是否启用加密验证
     if (!config.auth.enableAESAuth) {
@@ -74,14 +78,19 @@ export const verifyAESAuth = (req: Request, res: Response, next: NextFunction): 
     // 生成要验证的数据字符串
     const dataToVerify = generateDataToVerify(req);
 
-    // 验证签名（使用配置中的签名有效期）
-    const isValid = verifySignature(signature, dataToVerify, config.auth.signatureMaxAge);
+    // 验证签名（使用带 nonce 的增强版验证，防重放攻击）
+    const verifyResult = await verifySignatureWithNonce(
+      signature,
+      dataToVerify,
+      config.auth.signatureMaxAge
+    );
 
-    if (!isValid) {
+    if (!verifyResult.valid) {
       logger.warn('签名验证失败', {
         path: req.path,
         method: req.method,
         ip: req.ip,
+        reason: verifyResult.nonce ? 'nonce 已被使用（重放攻击）' : '签名无效或已过期',
       });
       res.status(401).json({
         error: {
