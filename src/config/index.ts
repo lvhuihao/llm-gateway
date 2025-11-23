@@ -1,14 +1,4 @@
 /**
- * 支持的模型列表
- */
-export const SUPPORTED_MODELS = ['qwen-flash', 'qwen3-30b-a3b-instruct-2507'] as const;
-
-/**
- * 模型配置类型
- */
-export type SupportedModel = (typeof SUPPORTED_MODELS)[number];
-
-/**
  * 配置管理对象
  */
 export const config = {
@@ -20,8 +10,7 @@ export const config = {
     defaultModel: process.env.LLM_DEFAULT_MODEL || 'qwen-flash',
     // 支持的模型列表（从环境变量读取，用逗号分隔，如果未设置则使用默认列表）
     supportedModels: process.env.LLM_SUPPORTED_MODELS
-      ? process.env.LLM_SUPPORTED_MODELS.split(',').map((m) => m.trim())
-      : (SUPPORTED_MODELS as readonly string[]),
+      ? process.env.LLM_SUPPORTED_MODELS.split(',').map((m) => m.trim()) : [],
     // 模型默认参数
     defaultParams: {
       temperature: parseFloat(process.env.LLM_DEFAULT_TEMPERATURE || '0.7'),
@@ -66,6 +55,23 @@ export const config = {
     password: process.env.REDIS_PASSWORD || '',
     // Redis 数据库编号
     db: parseInt(process.env.REDIS_DB || '0', 10),
+  },
+  // 日志配置
+  logger: {
+    // 日志级别: error, warn, info, http, verbose, debug, silly
+    level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
+    // 是否启用文件日志（默认：true）
+    enableFileLogging: process.env.ENABLE_FILE_LOGGING !== 'false',
+    // 日志文件目录
+    logDir: process.env.LOG_DIR || './logs',
+    // 是否启用控制台日志（默认：true）
+    enableConsoleLogging: process.env.ENABLE_CONSOLE_LOGGING !== 'false',
+    // 日志文件最大大小（默认：20MB）
+    maxSize: process.env.LOG_MAX_SIZE || '20m',
+    // 日志文件保留天数（默认：14天）
+    maxDays: parseInt(process.env.LOG_MAX_DAYS || '14', 10),
+    // 日志文件格式: json, simple
+    format: process.env.LOG_FORMAT || 'json',
   },
 };
 
